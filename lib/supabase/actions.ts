@@ -100,15 +100,15 @@ export async function toggleDayCompletion(
     month: number,
     day: number
 ): Promise<boolean> {
-    // Check if completion exists
-    const { data: existing } = await supabase
+    // Check if completion exists (use maybeSingle to avoid 406 when no row exists)
+    const { data: existing, error: fetchError } = await supabase
         .from('action_completions')
         .select('completion_id, completed')
         .eq('action_id', actionId)
         .eq('year', year)
         .eq('month', month)
         .eq('day', day)
-        .single()
+        .maybeSingle()
 
     if (existing) {
         // Toggle existing completion
