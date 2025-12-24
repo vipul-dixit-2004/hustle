@@ -25,7 +25,7 @@ A minimalist habit tracker to help you build consistency and achieve your goals.
 ### 1. Clone and Install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/vipul-dixit-2004/hustle
 cd hustle
 npm install
 ```
