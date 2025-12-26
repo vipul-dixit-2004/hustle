@@ -28,6 +28,62 @@ export interface ActionWithCompletions extends Action {
     completions: number[]
 }
 
+// User profile types for onboarding
+export interface UserPlatforms {
+    leetcode?: string
+    gfg?: string
+    codechef?: string
+}
+
+export interface UserDetails {
+    role?: 'student' | 'professional' | 'freelancer'
+    activities?: string[]
+    platforms?: UserPlatforms
+    onboardingCompleted?: boolean
+    onboardingCompletedAt?: string
+}
+
+// Get user profile from users table
+export async function getUserProfile(userId: string): Promise<UserDetails | null> {
+    const { data, error } = await supabase
+        .from('users')
+        .select('details')
+        .eq('user_id', userId)
+        .single()
+
+    if (error) {
+        console.error('Error fetching user profile:', error)
+        return null
+    }
+
+    return data?.details as UserDetails | null
+}
+
+// Update user details JSONB field
+export async function updateUserDetails(userId: string, details: UserDetails): Promise<boolean> {
+    const { error } = await supabase
+        .from('users')
+        .update({
+            details,
+            updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+
+    if (error) {
+        console.error('Error updating user details:', error)
+        throw new Error(error.message)
+    }
+
+    return true
+}
+
+// Check if user has completed onboarding
+export async function hasCompletedOnboarding(userId: string): Promise<boolean> {
+    const details = await getUserProfile(userId)
+    return details?.onboardingCompleted === true
+}
+
+
 // Get all actions for a user with their completions for a specific month
 export async function getActionsWithCompletions(
     userId: string,

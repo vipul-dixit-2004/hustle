@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, Loader2, Zap, Flame, Trophy, Calendar } from 'lucide-react'
+import { LogOut, Loader2, Zap, Flame, Trophy, Calendar, User } from 'lucide-react'
 import { signOut, getUser, onAuthStateChange } from '@/lib/supabase/auth'
-import { getUserStats } from '@/lib/supabase/actions'
+import { getUserStats, hasCompletedOnboarding } from '@/lib/supabase/actions'
 import { ActionTracker } from '@/components/ActionTracker'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
@@ -35,11 +35,21 @@ export default function DashboardClient() {
     useEffect(() => {
         const fetchUser = async () => {
             const currentUser = await getUser()
+            if (!currentUser) {
+                setLoading(false)
+                return
+            }
+
+            // Check if user has completed onboarding
+            const onboarded = await hasCompletedOnboarding(currentUser.id)
+            if (!onboarded) {
+                router.push('/onboarding')
+                return
+            }
+
             setUser(currentUser)
             setLoading(false)
-            if (currentUser) {
-                fetchStats(currentUser.id)
-            }
+            fetchStats(currentUser.id)
         }
 
         fetchUser()
@@ -52,7 +62,7 @@ export default function DashboardClient() {
         })
 
         return () => subscription.unsubscribe()
-    }, [fetchStats])
+    }, [fetchStats, router])
 
     const handleLogout = async () => {
         setLoggingOut(true)
@@ -121,6 +131,13 @@ export default function DashboardClient() {
                             <span className="hidden sm:block text-sm text-zinc-500 max-w-[150px] truncate">
                                 {user?.email}
                             </span>
+                            <Link
+                                href="/profile"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+                            >
+                                <User className="w-4 h-4" />
+                                <span className="hidden sm:inline">Profile</span>
+                            </Link>
                             <button
                                 onClick={handleLogout}
                                 disabled={loggingOut}

@@ -32,7 +32,9 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     const isAuthPage = request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup'
-    const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
+    const isOnboardingPage = request.nextUrl.pathname === '/onboarding'
+    const isProfilePage = request.nextUrl.pathname === '/profile'
+    const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || isOnboardingPage || isProfilePage
 
     // Redirect to login if accessing protected route without auth
     if (isProtectedRoute && !user) {
@@ -52,5 +54,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/login', '/signup'],
+    matcher: ['/dashboard/:path*', '/login', '/signup', '/onboarding', '/profile'],
 }
