@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogOut, Loader2, Zap, Flame, Trophy, Calendar, User } from 'lucide-react'
 import { signOut, getUser, onAuthStateChange } from '@/lib/supabase/auth'
-import { getUserStats, hasCompletedOnboarding } from '@/lib/supabase/actions'
+import { getUserStats, hasCompletedOnboarding, getUserProfile } from '@/lib/supabase/actions'
 import { ActionTracker } from '@/components/ActionTracker'
+import { LeetCodeStats } from '@/components/LeetCodeStats'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface UserStats {
@@ -22,6 +23,7 @@ export default function DashboardClient() {
     const [loading, setLoading] = useState(true)
     const [loggingOut, setLoggingOut] = useState(false)
     const [stats, setStats] = useState<UserStats | null>(null)
+    const [leetUsername, setLeetUsername] = useState<string | null>(null)
 
     const fetchStats = useCallback(async (userId: string) => {
         try {
@@ -50,6 +52,16 @@ export default function DashboardClient() {
             setUser(currentUser)
             setLoading(false)
             fetchStats(currentUser.id)
+            // fetch stored profile to get platforms (leetcode username)
+            try {
+                const profile = await getUserProfile(currentUser.id)
+                const username = profile?.platforms?.leetcode ?? null
+                if (username) {
+                    setLeetUsername(username)
+                }
+            } catch (err) {
+                console.error('Failed to fetch profile:', err)
+            }
         }
 
         fetchUser()
@@ -58,6 +70,13 @@ export default function DashboardClient() {
             setUser(user as SupabaseUser | null)
             if (user) {
                 fetchStats((user as SupabaseUser).id)
+                // refresh leetcode username when auth changes
+                getUserProfile((user as SupabaseUser).id).then(profile => {
+                    const username = profile?.platforms?.leetcode ?? null
+                    if (username) {
+                        setLeetUsername(username)
+                    }
+                }).catch(() => { })
             }
         })
 
@@ -207,7 +226,11 @@ export default function DashboardClient() {
                     </div>
                 </div>
 
-                {user && <ActionTracker userId={user.id} onStatsUpdate={handleStatsUpdate} />}
+                {user && (
+                    <ActionTracker userId={user.id} onStatsUpdate={handleStatsUpdate}>
+                        {leetUsername && <LeetCodeStats username={leetUsername} />}
+                    </ActionTracker>
+                )}
             </main>
         </div>
     )

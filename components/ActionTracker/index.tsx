@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Loader2, Plus, Lock } from 'lucide-react'
 import { ActionRow, AddActionForm } from './ActionRow'
 import { ProgressChart } from './ProgressChart'
+import type { ReactNode } from 'react'
 import {
     getActionsWithCompletions,
     createAction,
@@ -16,6 +17,7 @@ import {
 interface ActionTrackerProps {
     userId: string
     onStatsUpdate?: () => void
+    children?: ReactNode
 }
 
 const MONTH_NAMES = [
@@ -28,7 +30,7 @@ const MONTH_NAMES_FULL = [
     'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
-export function ActionTracker({ userId, onStatsUpdate }: ActionTrackerProps) {
+export function ActionTracker({ userId, onStatsUpdate, children }: ActionTrackerProps) {
     const today = new Date()
     const [year, setYear] = useState(today.getFullYear())
     const [month, setMonth] = useState(today.getMonth() + 1)
@@ -187,6 +189,9 @@ export function ActionTracker({ userId, onStatsUpdate }: ActionTrackerProps) {
 
             {/* Progress Chart */}
             <ProgressChart data={stats} currentDay={isFutureMonth ? 0 : currentDay} />
+
+            {/* Custom slot (e.g., LeetCode stats) */}
+            {children}
 
             {/* Actions */}
             <div className="rounded-2xl bg-white/[0.02] border border-white/5 overflow-hidden">
